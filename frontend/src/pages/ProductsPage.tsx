@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product, User } from '../api/client';
-import { Package, Plus, Search, Tag, Layers, TrendingUp } from 'lucide-react';
+import { Plus, Search, Package } from 'lucide-react';
 import { CreateProductModal } from '../components/CreateProductModal';
 
 interface ProductsPageProps {
@@ -12,144 +12,128 @@ interface ProductsPageProps {
 }
 
 export const ProductsPage: React.FC<ProductsPageProps> = ({
-  products, currentUser, onCreateProduct, loading,
+  products,
+  currentUser,
+  onCreateProduct,
+  loading,
 }) => {
   const [search, setSearch] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const filtered = products.filter(p =>
-    p.sku.toLowerCase().includes(search.toLowerCase()) ||
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    (p.description || '').toLowerCase().includes(search.toLowerCase())
+  const filtered = products.filter(
+    (p) =>
+      p.sku.toLowerCase().includes(search.toLowerCase()) ||
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (p.description && p.description.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const totalStock = products.reduce((a, p) => a + (p.quantityOnHand || 0), 0);
+  const totalStocked = products.filter((p) => (p.quantityOnHand || 0) > 0).length;
+  const zeroStock = products.filter((p) => (p.quantityOnHand || 0) === 0).length;
+  const totalUnits = products.reduce((s, p) => s + (p.quantityOnHand || 0), 0);
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+    <div className="space-y-5">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-200">
         <div>
-          <div className="flex items-center gap-2.5 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-              <Package className="w-4 h-4 text-indigo-400" />
-            </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">Product Catalog</h1>
-          </div>
-          <p className="text-sm text-gray-500 ml-10.5">{products.length} SKUs registered</p>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Product Master Catalog</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Centralized inventory product definitions, SKU numbers, and packaging units
+          </p>
         </div>
 
         {currentUser?.role === 'SUPERVISOR' && (
           <button
             onClick={() => setShowCreateModal(true)}
-            className="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shrink-0"
+            className="btn-primary inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            Add Product SKU
+            <span>Register Product SKU</span>
           </button>
         )}
       </div>
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4 card-glow-blue">
-          <div className="flex items-start justify-between mb-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              <Layers className="w-3.5 h-3.5 text-blue-400" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-white counter-text">{products.length}</div>
-          <div className="text-xs text-gray-500 mt-0.5">Total SKUs</div>
+      {/* Metrics Strip */}
+      <div className="bg-white border border-slate-200 rounded-lg grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 shadow-sm">
+        <div className="p-4">
+          <span className="text-xs font-medium text-slate-500 block">Total Catalog SKUs</span>
+          <span className="text-2xl font-bold text-slate-900 font-mono mt-1 block">{products.length}</span>
         </div>
-
-        <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4 card-glow-green">
-          <div className="flex items-start justify-between mb-2">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-400 counter-text">{totalStock.toLocaleString()}</div>
-          <div className="text-xs text-gray-500 mt-0.5">Total Units On Hand</div>
+        <div className="p-4">
+          <span className="text-xs font-medium text-slate-500 block">Total Units On Hand</span>
+          <span className="text-2xl font-bold text-slate-900 font-mono mt-1 block">{totalUnits.toLocaleString()}</span>
         </div>
-
-        <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-4 col-span-2 sm:col-span-1">
-          <div className="flex items-start justify-between mb-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-              <Package className="w-3.5 h-3.5 text-amber-400" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-amber-400 counter-text">
-            {products.filter(p => (p.quantityOnHand || 0) === 0).length}
-          </div>
-          <div className="text-xs text-gray-500 mt-0.5">Zero Stock Items</div>
+        <div className="p-4">
+          <span className="text-xs font-medium text-emerald-700 block">Active Stocked SKUs</span>
+          <span className="text-2xl font-bold text-emerald-800 font-mono mt-1 block">{totalStocked}</span>
+        </div>
+        <div className="p-4">
+          <span className="text-xs font-medium text-slate-500 block">Zero Stock SKUs</span>
+          <span className="text-2xl font-bold text-slate-700 font-mono mt-1 block">{zeroStock}</span>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
           <input
             type="text"
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by SKU or product name..."
-            className="w-full pl-9 pr-4 py-2 rounded-xl bg-gray-900 border border-gray-800 text-sm text-gray-300 placeholder-gray-600 input-glow"
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by SKU code or product name..."
+            className="enterprise-input w-full pl-8 pr-3 py-1.5 text-xs text-slate-800"
           />
         </div>
-        {search && (
-          <span className="text-xs text-gray-500">{filtered.length} result{filtered.length !== 1 ? 's' : ''}</span>
-        )}
       </div>
 
-      {/* Table */}
-      <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl overflow-hidden">
+      {/* Data Table */}
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-20 text-center">
-            <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading catalog...</p>
-          </div>
+          <div className="py-16 text-center text-slate-400 text-xs">Loading product catalog...</div>
         ) : filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-gray-800/60 border border-gray-700/60 flex items-center justify-center mx-auto mb-4">
-              <Package className="w-6 h-6 text-gray-600" />
-            </div>
-            <p className="text-sm text-gray-400">No products found</p>
+          <div className="py-16 text-center">
+            <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm font-medium text-slate-700">No products found</p>
+            <p className="text-xs text-slate-400 mt-1">No items match your search filter.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-gray-800/60 text-xs font-medium text-gray-400">
-                <th className="text-left px-5 py-3">SKU code</th>
-                <th className="text-left px-5 py-3">Product name</th>
-                <th className="text-left px-5 py-3 hidden lg:table-cell">Description</th>
-                <th className="text-center px-4 py-3">Unit</th>
-                <th className="text-right px-5 py-3">Quantity on hand</th>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-4 py-3">SKU Code</th>
+                <th className="px-4 py-3">Product Name</th>
+                <th className="px-4 py-3 hidden md:table-cell">Technical Description</th>
+                <th className="px-4 py-3 text-center">Unit</th>
+                <th className="px-4 py-3 text-right">Available On Hand</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.map((p, idx) => (
-                <tr key={p.id} className="table-row-hover border-b border-gray-800/30 last:border-0" style={{ animationDelay: `${idx * 20}ms` }}>
-                  <td className="px-5 py-4">
-                    <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-blue-400 bg-blue-500/5 border border-blue-500/10 px-2 py-1 rounded-lg">
-                      <Tag className="w-3 h-3 text-blue-500/50" />
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="px-4 py-3.5">
+                    <span className="font-mono text-xs font-semibold text-slate-900 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
                       {p.sku}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="font-semibold text-gray-200">{p.name}</span>
-                  </td>
-                  <td className="px-5 py-4 hidden lg:table-cell">
-                    <span className="text-gray-500 text-xs max-w-xs truncate block">{p.description || <span className="text-gray-700">—</span>}</span>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className="font-mono text-xs font-semibold bg-gray-800 border border-gray-700/60 px-2 py-1 rounded-lg text-gray-400">{p.uom}</span>
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <span className={`text-base font-bold tabular-nums ${(p.quantityOnHand || 0) > 0 ? 'text-emerald-400' : 'text-gray-600'}`}>
-                      {(p.quantityOnHand || 0).toLocaleString()}
                     </span>
-                    <span className="text-xs text-gray-600 ml-1">{p.uom}</span>
+                  </td>
+                  <td className="px-4 py-3.5 font-medium text-slate-900">
+                    {p.name}
+                  </td>
+                  <td className="px-4 py-3.5 hidden md:table-cell text-slate-500">
+                    {p.description || '—'}
+                  </td>
+                  <td className="px-4 py-3.5 text-center">
+                    <span className="font-mono text-[11px] text-slate-600 font-medium px-2 py-0.5 rounded bg-slate-50 border border-slate-200">
+                      {p.uom}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-right font-mono font-semibold text-slate-900">
+                    {(p.quantityOnHand || 0) > 0 ? (
+                      <span className="text-emerald-700">{p.quantityOnHand?.toLocaleString()}</span>
+                    ) : (
+                      <span className="text-slate-400">0</span>
+                    )}
+                    <span className="text-[11px] text-slate-400 font-normal ml-1">{p.uom}</span>
                   </td>
                 </tr>
               ))}
@@ -158,7 +142,12 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
         )}
       </div>
 
-      {showCreateModal && <CreateProductModal onClose={() => setShowCreateModal(false)} onSubmit={onCreateProduct} />}
+      {showCreateModal && (
+        <CreateProductModal
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={onCreateProduct}
+        />
+      )}
     </div>
   );
 };

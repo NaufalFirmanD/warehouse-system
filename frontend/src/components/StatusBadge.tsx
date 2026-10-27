@@ -2,25 +2,45 @@ import React from 'react';
 
 interface StatusBadgeProps {
   status: string;
-  size?: 'sm' | 'md';
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md' }) => {
-  const config: Record<string, { bg: string; text: string; border: string; dot: string; label: string }> = {
-    DRAFT:      { bg: 'bg-gray-800/80',    text: 'text-gray-400',    border: 'border-gray-700/60',   dot: 'bg-gray-500',   label: 'Draft' },
-    PENDING:    { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/25',  dot: 'bg-amber-400',  label: 'Pending' },
-    RECEIVING:  { bg: 'bg-blue-500/10',    text: 'text-blue-400',    border: 'border-blue-500/25',   dot: 'bg-blue-400',   label: 'Receiving' },
-    COMPLETED:  { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/25',dot: 'bg-emerald-400',label: 'Completed' },
-    CANCELED:   { bg: 'bg-rose-500/10',    text: 'text-rose-400',    border: 'border-rose-500/25',   dot: 'bg-rose-400',   label: 'Canceled' },
-  };
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+  const s = status.toUpperCase();
 
-  const c = config[status] || config.DRAFT;
-  const padClass = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-xs';
+  let styles = 'bg-slate-100 text-slate-700 border-slate-200';
+  let label = status;
+  let hasPulse = false;
+
+  switch (s) {
+    case 'PENDING':
+      styles = 'bg-amber-50 text-amber-800 border-amber-200';
+      label = 'Pending Dock';
+      break;
+    case 'RECEIVING':
+      styles = 'bg-blue-50 text-blue-800 border-blue-200';
+      label = 'Receiving Active';
+      hasPulse = true;
+      break;
+    case 'COMPLETED':
+      styles = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+      label = 'Completed';
+      break;
+    case 'CANCELED':
+      styles = 'bg-slate-100 text-slate-500 border-slate-200 line-through';
+      label = 'Canceled';
+      break;
+    case 'DRAFT':
+      styles = 'bg-slate-100 text-slate-600 border-slate-200';
+      label = 'Draft';
+      break;
+  }
 
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full font-semibold tracking-wide border ${c.bg} ${c.text} ${c.border} ${padClass}`}>
-      <span className={`relative flex h-1.5 w-1.5 rounded-full ${c.dot} ${status === 'RECEIVING' ? 'dot-pulse' : ''}`} />
-      {c.label}
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium border ${styles}`}>
+      {hasPulse && (
+        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+      )}
+      {label}
     </span>
   );
 };

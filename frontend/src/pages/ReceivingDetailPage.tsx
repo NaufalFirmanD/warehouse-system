@@ -3,8 +3,8 @@ import { api, ReceivingDocumentDetail, ReceivingItem, User } from '../api/client
 import { StatusBadge } from '../components/StatusBadge';
 import { ReceiveModal } from '../components/ReceiveModal';
 import {
-  ArrowLeft, CheckCircle2, AlertTriangle, PackageCheck, Lock,
-  Truck, Calendar, User as UserIcon, ClipboardCheck, Info, ChevronRight
+  ArrowLeft, CheckCircle2, AlertTriangle, Lock,
+  Truck, Calendar, User as UserIcon, Check, ChevronRight
 } from 'lucide-react';
 
 interface ReceivingDetailPageProps {
@@ -14,7 +14,9 @@ interface ReceivingDetailPageProps {
 }
 
 export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
-  documentId, currentUser, onBack,
+  documentId,
+  currentUser,
+  onBack,
 }) => {
   const [doc, setDoc] = useState<ReceivingDocumentDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,13 +43,15 @@ export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
     }
   };
 
-  useEffect(() => { fetchDoc(); }, [documentId]);
+  useEffect(() => {
+    fetchDoc();
+  }, [documentId]);
 
   const handleRecordReceipt = async (quantity: number) => {
     if (!selectedItemForReceive || !doc) return;
     await api.recordReceipt(doc.id, selectedItemForReceive.id, quantity);
     await fetchDoc();
-    showToast(`✓ Received ${quantity} ${selectedItemForReceive.uom} of ${selectedItemForReceive.productName}`);
+    showToast(`Received ${quantity} ${selectedItemForReceive.uom} of ${selectedItemForReceive.productName}`);
   };
 
   const handleCompleteDocument = async () => {
@@ -56,9 +60,9 @@ export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
     try {
       await api.updateDocumentStatus(doc.id, 'COMPLETED');
       await fetchDoc();
-      showToast('Document marked as COMPLETED');
+      showToast('Document marked as COMPLETED.');
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      alert(`Error completing document: ${err.message}`);
     } finally {
       setActionLoading(false);
     }
@@ -66,22 +70,22 @@ export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
 
   if (loading) {
     return (
-      <div className="py-24 text-center animate-fade-in-up">
-        <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-sm text-gray-500">Loading receiving document...</p>
+      <div className="py-20 text-center text-xs text-slate-400">
+        Loading document details...
       </div>
     );
   }
 
   if (error || !doc) {
     return (
-      <div className="py-16 text-center animate-fade-in-up">
-        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-4">
-          <AlertTriangle className="w-7 h-7 text-rose-400" />
-        </div>
-        <h3 className="text-base font-semibold text-gray-200 mb-1">{error || 'Document not found'}</h3>
-        <button onClick={onBack} className="mt-4 px-4 py-2 rounded-xl bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700 transition">
-          Go back
+      <div className="bg-white border border-slate-200 rounded-lg p-8 text-center max-w-md mx-auto my-12 shadow-sm">
+        <AlertTriangle className="w-8 h-8 text-amber-600 mx-auto mb-3" />
+        <h3 className="text-sm font-semibold text-slate-900 mb-1">{error || 'Document not found'}</h3>
+        <button
+          onClick={onBack}
+          className="btn-secondary mt-4 px-3 py-1.5 rounded-md text-xs"
+        >
+          Return to manifest list
         </button>
       </div>
     );
@@ -90,209 +94,211 @@ export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
   const totalExpected = doc.items.reduce((s, i) => s + i.expectedQuantity, 0);
   const totalReceived = doc.items.reduce((s, i) => s + i.receivedQuantity, 0);
   const overallPct = totalExpected > 0 ? Math.round((totalReceived / totalExpected) * 100) : 0;
-  const allItemsReceived = doc.items.length > 0 && doc.items.every(i => i.receivedQuantity >= i.expectedQuantity);
+  const allItemsReceived = doc.items.length > 0 && doc.items.every((i) => i.receivedQuantity >= i.expectedQuantity);
   const isLocked = doc.status === 'COMPLETED' || doc.status === 'CANCELED';
   const isSupervisor = currentUser?.role === 'SUPERVISOR';
 
   return (
-    <div className="space-y-5 animate-fade-in-up">
+    <div className="space-y-5">
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-gray-800 border border-emerald-500/30 text-emerald-400 text-sm font-medium px-4 py-3 rounded-xl shadow-2xl animate-slide-in">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-xl">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           {toast}
         </div>
       )}
 
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm">
-        <button onClick={onBack} className="text-gray-500 hover:text-gray-300 flex items-center gap-1 transition font-medium">
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+        <button
+          onClick={onBack}
+          className="hover:text-slate-900 flex items-center gap-1 font-medium transition-colors"
+        >
           <ArrowLeft className="w-3.5 h-3.5" />
-          Receiving
+          <span>Inbound Receiving</span>
         </button>
-        <ChevronRight className="w-3 h-3 text-gray-700" />
-        <span className="font-mono text-blue-400 font-semibold text-xs">{doc.documentNumber}</span>
+        <ChevronRight className="w-3 h-3 text-slate-300" />
+        <span className="font-mono text-slate-800 font-semibold">{doc.documentNumber}</span>
       </div>
 
-      {/* Header Card */}
-      <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl p-5">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          {/* Left */}
-          <div className="space-y-3 flex-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="font-mono text-xl font-bold text-white">{doc.documentNumber}</span>
+      {/* Manifest Overview Header Card */}
+      <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          {/* Manifest Meta */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xl font-bold text-slate-900 tracking-tight">
+                {doc.documentNumber}
+              </span>
               <StatusBadge status={doc.status} />
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-              <div className="flex items-center gap-2 text-gray-400">
-                <Truck className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-                <span className="font-medium text-gray-200">{doc.supplierName}</span>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-600">
+              <div className="flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-slate-500">Vendor:</span>
+                <span className="font-medium text-slate-900">{doc.supplierName}</span>
               </div>
-              {doc.expectedDate && (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Calendar className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-                  <span>{doc.expectedDate.slice(0, 10)}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-slate-500">Expected:</span>
+                <span className="font-medium text-slate-900">
+                  {doc.expectedDate ? doc.expectedDate.slice(0, 10) : '—'}
+                </span>
+              </div>
               {doc.createdByName && (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <UserIcon className="w-3.5 h-3.5 text-gray-600 shrink-0" />
-                  <span>{doc.createdByName}</span>
+                <div className="flex items-center gap-1.5">
+                  <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-slate-500">Created by:</span>
+                  <span className="font-medium text-slate-900">{doc.createdByName}</span>
                 </div>
               )}
             </div>
 
             {doc.notes && (
-              <div className="flex items-start gap-2 text-xs text-gray-500 bg-gray-800/40 rounded-xl px-3 py-2 border border-gray-700/40">
-                <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-600" />
+              <p className="text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded border border-slate-200/80 max-w-2xl">
                 {doc.notes}
-              </div>
+              </p>
             )}
           </div>
 
-          {/* Overall Progress */}
-          <div className="bg-gray-800/60 border border-gray-700/50 rounded-xl p-4 min-w-[180px] space-y-3">
+          {/* Manifest Progress & Supervisor Finalization */}
+          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 min-w-[260px] space-y-2.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500 font-medium">Overall Progress</span>
-              <span className={`font-bold tabular-nums ${overallPct === 100 ? 'text-emerald-400' : 'text-blue-400'}`}>{overallPct}%</span>
+              <span className="text-slate-500 font-medium">Manifest Intake</span>
+              <span className="font-mono font-bold text-slate-900">{overallPct}%</span>
             </div>
-            <div className="h-2.5 bg-gray-900 rounded-full overflow-hidden">
+
+            <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all duration-700 ${overallPct === 100 ? 'bg-gradient-to-r from-emerald-500 to-green-400' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}
+                className={`h-full rounded-full transition-all duration-300 ${
+                  overallPct === 100 ? 'bg-emerald-600' : 'bg-blue-600'
+                }`}
                 style={{ width: `${overallPct}%` }}
               />
             </div>
-            <div className="flex justify-between text-xs text-gray-500">
+
+            <div className="flex justify-between text-[11px] text-slate-500 font-mono">
               <span>{totalReceived} received</span>
               <span>{totalExpected} expected</span>
             </div>
 
-            {/* Complete button */}
             {!isLocked && (
               <button
                 onClick={handleCompleteDocument}
                 disabled={actionLoading || !allItemsReceived || !isSupervisor}
-                className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                className={`w-full py-2 rounded-md text-xs font-medium transition-all ${
                   allItemsReceived && isSupervisor
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-                    : 'bg-gray-800 text-gray-600 cursor-not-allowed border border-gray-700/40'
+                    ? 'btn-primary'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 }`}
                 title={
                   !isSupervisor
-                    ? 'Only Supervisors can mark documents as completed'
+                    ? 'Only Supervisors can finalize delivery documents'
                     : !allItemsReceived
-                    ? 'All items must be fully received first'
+                    ? 'All items must be 100% received first'
                     : undefined
                 }
               >
-                <ClipboardCheck className="w-3.5 h-3.5" />
-                {actionLoading ? 'Processing...' : 'Mark Completed'}
+                {actionLoading ? 'Finalizing...' : 'Finalize & Complete Document'}
               </button>
             )}
 
             {isLocked && (
-              <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                <Lock className="w-3 h-3" />
-                <span>Document locked ({doc.status})</span>
+              <div className="flex items-center justify-center gap-1 text-xs text-slate-500 pt-1">
+                <Lock className="w-3 h-3 text-slate-400" />
+                <span>Document Closed ({doc.status})</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Items Table */}
-      <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-800/60">
-          <div className="flex items-center gap-2.5">
-            <PackageCheck className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm font-semibold text-gray-200">Line Items</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-800 text-gray-500 font-medium">{doc.items.length}</span>
-          </div>
+      {/* Manifest Line Items Table */}
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <div className="px-4 py-3 border-b border-slate-200 bg-slate-50/50 flex items-center justify-between">
+          <span className="text-xs font-semibold text-slate-900">
+            Delivery Line Items ({doc.items.length})
+          </span>
           {!isLocked && (
-            <p className="text-xs text-gray-600">Click <span className="text-blue-400">"Receive Goods"</span> to log receipt at dock</p>
+            <span className="text-[11px] text-slate-500">
+              Click <strong className="text-slate-700">Receive</strong> to record actual quantity at dock
+            </span>
           )}
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs text-gray-400 font-medium border-b border-gray-800/40">
-                <th className="text-left px-5 py-3">Product item</th>
-                <th className="text-center px-4 py-3">Expected qty</th>
-                <th className="text-center px-4 py-3">Received qty</th>
-                <th className="text-center px-4 py-3">Remaining balance</th>
-                <th className="px-5 py-3">Fulfillment</th>
-                <th className="px-5 py-3 text-right">Dock action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {doc.items.map((item) => {
-                const pct = Math.min(100, Math.round((item.receivedQuantity / item.expectedQuantity) * 100));
-                const isDone = item.receivedQuantity >= item.expectedQuantity;
+        <table className="w-full text-left text-xs">
+          <thead>
+            <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+              <th className="px-4 py-3">Product SKU & Name</th>
+              <th className="px-4 py-3 text-center">Expected</th>
+              <th className="px-4 py-3 text-center">Received</th>
+              <th className="px-4 py-3 text-center">Remaining Balance</th>
+              <th className="px-4 py-3">Fulfillment</th>
+              <th className="px-4 py-3 text-right">Dock Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {doc.items.map((item) => {
+              const pct = Math.min(100, Math.round((item.receivedQuantity / item.expectedQuantity) * 100));
+              const isDone = item.receivedQuantity >= item.expectedQuantity;
 
-                return (
-                  <tr key={item.id} className="table-row-hover border-b border-gray-800/30 last:border-0">
-                    <td className="px-5 py-4">
-                      <div className="font-mono text-xs font-bold text-blue-400 mb-0.5">{item.productSku}</div>
-                      <div className="font-medium text-gray-200 text-sm">{item.productName}</div>
-                      <div className="text-xs text-gray-600 mt-0.5">{item.uom}</div>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className="text-base font-bold text-gray-300 tabular-nums">{item.expectedQuantity}</span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className={`text-base font-bold tabular-nums ${isDone ? 'text-emerald-400' : 'text-blue-400'}`}>{item.receivedQuantity}</span>
-                    </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className={`text-base font-bold tabular-nums ${item.remainingQuantity > 0 ? 'text-amber-400' : 'text-gray-600'}`}>
-                        {item.remainingQuantity}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="w-36 space-y-1">
-                        <div className="flex items-center justify-between text-[10px] text-gray-600">
-                          <span>{pct}%</span>
-                          {isDone && <span className="text-emerald-500 font-semibold">✓ Done</span>}
-                        </div>
-                        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              isDone ? 'bg-gradient-to-r from-emerald-500 to-green-400'
-                                     : pct > 0 ? 'bg-gradient-to-r from-blue-500 to-indigo-400'
-                                     : 'bg-transparent'
-                            }`}
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
+              return (
+                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="px-4 py-3.5">
+                    <span className="font-mono text-xs font-semibold text-slate-900 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded mr-2">
+                      {item.productSku}
+                    </span>
+                    <span className="font-medium text-slate-900">{item.productName}</span>
+                    <span className="text-[11px] text-slate-400 ml-2">({item.uom})</span>
+                  </td>
+                  <td className="px-4 py-3.5 text-center font-mono font-medium text-slate-700">
+                    {item.expectedQuantity}
+                  </td>
+                  <td className="px-4 py-3.5 text-center font-mono font-semibold">
+                    <span className={isDone ? 'text-emerald-700' : 'text-blue-700'}>
+                      {item.receivedQuantity}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-center font-mono font-semibold">
+                    <span className={item.remainingQuantity > 0 ? 'text-amber-700' : 'text-slate-400'}>
+                      {item.remainingQuantity}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-2 max-w-[130px]">
+                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                        <div
+                          className={`h-full rounded-full ${isDone ? 'bg-emerald-600' : 'bg-blue-600'}`}
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      {isDone ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Complete
-                        </span>
-                      ) : isLocked ? (
-                        <span className="text-xs text-gray-700 flex items-center gap-1 justify-end">
-                          <Lock className="w-3 h-3" /> Locked
-                        </span>
-                      ) : (
-                        <button
-                          id={`receive-btn-${item.id}`}
-                          onClick={() => setSelectedItemForReceive(item)}
-                          className="btn-primary px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white"
-                        >
-                          Receive Goods
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      <span className="font-mono text-[11px] text-slate-500 min-w-[28px]">{pct}%</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3.5 text-right">
+                    {isDone ? (
+                      <span className="inline-flex items-center gap-1 font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded text-[11px]">
+                        <Check className="w-3.5 h-3.5" />
+                        Completed
+                      </span>
+                    ) : isLocked ? (
+                      <span className="text-slate-400 text-xs">Locked</span>
+                    ) : (
+                      <button
+                        id={`receive-btn-${item.id}`}
+                        onClick={() => setSelectedItemForReceive(item)}
+                        className="btn-primary px-3 py-1 rounded text-xs"
+                      >
+                        Receive
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
       {selectedItemForReceive && (

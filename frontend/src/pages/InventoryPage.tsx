@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { InventoryItem } from '../api/client';
-import { Archive, Search, TrendingUp, Package2, BarChart3 } from 'lucide-react';
+import { Search, Archive } from 'lucide-react';
 
 interface InventoryPageProps {
   inventory: InventoryItem[];
@@ -10,117 +10,122 @@ interface InventoryPageProps {
 export const InventoryPage: React.FC<InventoryPageProps> = ({ inventory, loading }) => {
   const [search, setSearch] = useState('');
 
-  const filtered = inventory.filter(i =>
-    i.sku.toLowerCase().includes(search.toLowerCase()) ||
-    i.name.toLowerCase().includes(search.toLowerCase())
+  const filtered = inventory.filter(
+    (item) =>
+      item.sku.toLowerCase().includes(search.toLowerCase()) ||
+      item.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totalUnits = inventory.reduce((a, c) => a + c.quantityOnHand, 0);
-  const inStock = inventory.filter(i => i.quantityOnHand > 0).length;
-  const zeroStock = inventory.filter(i => i.quantityOnHand === 0).length;
-  const maxStock = Math.max(...inventory.map(i => i.quantityOnHand), 1);
+  const totalStock = inventory.reduce((s, i) => s + i.quantityOnHand, 0);
+  const inStockCount = inventory.filter((i) => i.quantityOnHand > 0).length;
+  const zeroStockCount = inventory.filter((i) => i.quantityOnHand === 0).length;
+  const maxStock = Math.max(...inventory.map((i) => i.quantityOnHand), 1);
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-2.5 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-            <Archive className="w-4 h-4 text-emerald-400" />
-          </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">Available Inventory</h1>
+    <div className="space-y-5">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-200">
+        <div>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Inventory Balances</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Real-time physical stock on hand across all warehouse storage bins
+          </p>
         </div>
-        <p className="text-sm text-gray-500 ml-10.5">Real-time on-hand balances across all SKUs</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Total SKUs', value: inventory.length, color: 'text-white', bg: 'bg-gray-900/60', border: 'border-gray-800/80', icon: Package2, iconColor: 'text-gray-400', iconBg: 'bg-gray-800' },
-          { label: 'Total Units', value: totalUnits.toLocaleString(), color: 'text-emerald-400', bg: 'bg-gray-900/60', border: 'border-emerald-500/15', icon: TrendingUp, iconColor: 'text-emerald-400', iconBg: 'bg-emerald-500/10', glow: 'card-glow-green' },
-          { label: 'SKUs In Stock', value: inStock, color: 'text-blue-400', bg: 'bg-gray-900/60', border: 'border-blue-500/15', icon: BarChart3, iconColor: 'text-blue-400', iconBg: 'bg-blue-500/10', glow: 'card-glow-blue' },
-          { label: 'Zero Stock', value: zeroStock, color: zeroStock > 0 ? 'text-amber-400' : 'text-gray-600', bg: 'bg-gray-900/60', border: zeroStock > 0 ? 'border-amber-500/15' : 'border-gray-800/80', icon: Archive, iconColor: zeroStock > 0 ? 'text-amber-400' : 'text-gray-600', iconBg: zeroStock > 0 ? 'bg-amber-500/10' : 'bg-gray-800' },
-        ].map(({ label, value, color, bg, border, icon: Icon, iconColor, iconBg, glow = '' }) => (
-          <div key={label} className={`${bg} border ${border} rounded-2xl p-4 ${glow}`}>
-            <div className={`w-8 h-8 rounded-lg ${iconBg} border border-gray-700/30 flex items-center justify-center mb-3`}>
-              <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
-            </div>
-            <div className={`text-2xl font-bold counter-text ${color}`}>{value}</div>
-            <div className="text-xs text-gray-500 mt-0.5">{label}</div>
-          </div>
-        ))}
+      {/* Metrics Strip */}
+      <div className="bg-white border border-slate-200 rounded-lg grid grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 shadow-sm">
+        <div className="p-4">
+          <span className="text-xs font-medium text-slate-500 block">Total Units In Stock</span>
+          <span className="text-2xl font-bold text-slate-900 font-mono mt-1 block">{totalStock.toLocaleString()}</span>
+        </div>
+        <div className="p-4">
+          <span className="text-xs font-medium text-emerald-700 block">SKUs with Available Stock</span>
+          <span className="text-2xl font-bold text-emerald-800 font-mono mt-1 block">{inStockCount}</span>
+        </div>
+        <div className="p-4">
+          <span className="text-xs font-medium text-amber-700 block">Stockout / Zero Stock SKUs</span>
+          <span className="text-2xl font-bold text-amber-800 font-mono mt-1 block">{zeroStockCount}</span>
+        </div>
+        <div className="p-4">
+          <span className="text-xs font-medium text-slate-500 block">Active Item Count</span>
+          <span className="text-2xl font-bold text-slate-900 font-mono mt-1 block">{inventory.length}</span>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Filter inventory by SKU or name..."
-          className="w-full pl-9 pr-4 py-2 rounded-xl bg-gray-900 border border-gray-800 text-sm text-gray-300 placeholder-gray-600 input-glow"
-        />
+      {/* Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by SKU code or product description..."
+            className="enterprise-input w-full pl-8 pr-3 py-1.5 text-xs text-slate-800"
+          />
+        </div>
       </div>
 
-      {/* Inventory Table */}
-      <div className="bg-gray-900/60 border border-gray-800/80 rounded-2xl overflow-hidden">
+      {/* Data Table */}
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
         {loading ? (
-          <div className="py-20 text-center">
-            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading inventory...</p>
-          </div>
+          <div className="py-16 text-center text-slate-400 text-xs">Loading inventory balances...</div>
         ) : filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <Archive className="w-8 h-8 text-gray-700 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">No inventory data found</p>
+          <div className="py-16 text-center">
+            <Archive className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm font-medium text-slate-700">No inventory records</p>
+            <p className="text-xs text-slate-400 mt-1">Stock records will appear here as incoming shipments are received.</p>
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-gray-800/60 text-xs font-medium text-gray-400">
-                <th className="text-left px-5 py-3">SKU code</th>
-                <th className="text-left px-5 py-3">Product description</th>
-                <th className="text-center px-4 py-3">Unit</th>
-                <th className="px-5 py-3">Stock level</th>
-                <th className="text-right px-5 py-3">Quantity on hand</th>
-                <th className="text-right px-5 py-3 hidden md:table-cell">Last updated</th>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
+                <th className="px-4 py-3">SKU Code</th>
+                <th className="px-4 py-3">Product Name</th>
+                <th className="px-4 py-3 text-center">Unit</th>
+                <th className="px-4 py-3">Stock Ratio</th>
+                <th className="px-4 py-3 text-right">Physical On Hand</th>
+                <th className="px-4 py-3 text-right hidden md:table-cell">Last Audited</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.map(item => {
+            <tbody className="divide-y divide-slate-100">
+              {filtered.map((item) => {
                 const fillPct = Math.round((item.quantityOnHand / maxStock) * 100);
                 return (
-                  <tr key={item.productId} className="table-row-hover border-b border-gray-800/30 last:border-0">
-                    <td className="px-5 py-4">
-                      <span className="font-mono text-xs font-bold text-blue-400">{item.sku}</span>
+                  <tr key={item.productId} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-4 py-3.5">
+                      <span className="font-mono text-xs font-semibold text-slate-900 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">
+                        {item.sku}
+                      </span>
                     </td>
-                    <td className="px-5 py-4">
-                      <span className="font-medium text-gray-200">{item.name}</span>
+                    <td className="px-4 py-3.5 font-medium text-slate-900">
+                      {item.name}
                     </td>
-                    <td className="px-4 py-4 text-center">
-                      <span className="font-mono text-xs font-semibold bg-gray-800 border border-gray-700/60 px-2 py-1 rounded-lg text-gray-400">{item.uom}</span>
+                    <td className="px-4 py-3.5 text-center">
+                      <span className="font-mono text-[11px] text-slate-600 font-medium px-2 py-0.5 rounded bg-slate-50 border border-slate-200">
+                        {item.uom}
+                      </span>
                     </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3 max-w-[180px]">
-                        <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-2 max-w-[140px]">
+                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                           <div
-                            className={`h-full rounded-full ${item.quantityOnHand === 0 ? 'bg-gray-700' : 'bg-gradient-to-r from-emerald-500 to-green-400'}`}
+                            className={`h-full rounded-full ${item.quantityOnHand === 0 ? 'bg-slate-300' : 'bg-emerald-600'}`}
                             style={{ width: `${fillPct}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-600 tabular-nums min-w-[32px]">{fillPct}%</span>
+                        <span className="font-mono text-[11px] text-slate-500 min-w-[28px]">{fillPct}%</span>
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-right">
-                      <span className={`text-lg font-bold tabular-nums ${item.quantityOnHand > 0 ? 'text-emerald-400' : 'text-gray-600'}`}>
+                    <td className="px-4 py-3.5 text-right font-mono font-semibold text-slate-900">
+                      <span className={item.quantityOnHand > 0 ? 'text-emerald-700' : 'text-slate-400'}>
                         {item.quantityOnHand.toLocaleString()}
                       </span>
+                      <span className="text-[11px] text-slate-400 font-normal ml-1">{item.uom}</span>
                     </td>
-                    <td className="px-5 py-4 text-right hidden md:table-cell">
-                      <span className="text-xs text-gray-600">
-                        {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '—'}
-                      </span>
+                    <td className="px-4 py-3.5 text-right hidden md:table-cell text-slate-400 font-mono text-[11px]">
+                      {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : '—'}
                     </td>
                   </tr>
                 );
