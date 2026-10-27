@@ -83,13 +83,13 @@ export const TransactionHistoryPage: React.FC<TransactionHistoryPageProps> = ({ 
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800/60">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Timestamp</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Product</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Delta</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest hidden md:table-cell">Reference Doc</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest hidden lg:table-cell">Operator</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Type</th>
+              <tr className="border-b border-gray-800/60 text-xs font-medium text-gray-400">
+                <th className="text-left px-5 py-3">Timestamp</th>
+                <th className="text-left px-5 py-3">Product details</th>
+                <th className="text-center px-4 py-3">Quantity received</th>
+                <th className="text-left px-5 py-3 hidden md:table-cell">Reference manifest</th>
+                <th className="text-left px-5 py-3 hidden lg:table-cell">Receiving operator</th>
+                <th className="text-left px-5 py-3">Audit type</th>
               </tr>
             </thead>
             <tbody>

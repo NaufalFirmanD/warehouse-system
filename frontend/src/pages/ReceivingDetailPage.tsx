@@ -217,13 +217,13 @@ export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-gray-600 uppercase tracking-widest font-semibold border-b border-gray-800/40">
-                <th className="text-left px-5 py-3">Product</th>
-                <th className="text-center px-4 py-3">Expected</th>
-                <th className="text-center px-4 py-3">Received</th>
-                <th className="text-center px-4 py-3">Remaining</th>
-                <th className="px-5 py-3">Progress</th>
-                <th className="px-5 py-3 text-right">Action</th>
+              <tr className="text-xs text-gray-400 font-medium border-b border-gray-800/40">
+                <th className="text-left px-5 py-3">Product item</th>
+                <th className="text-center px-4 py-3">Expected qty</th>
+                <th className="text-center px-4 py-3">Received qty</th>
+                <th className="text-center px-4 py-3">Remaining balance</th>
+                <th className="px-5 py-3">Fulfillment</th>
+                <th className="px-5 py-3 text-right">Dock action</th>
               </tr>
             </thead>
             <tbody>

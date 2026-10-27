@@ -78,13 +78,13 @@ export const InventoryPage: React.FC<InventoryPageProps> = ({ inventory, loading
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800/60">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">SKU Code</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Product</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Unit</th>
-                <th className="px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Stock Level</th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Qty On Hand</th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest hidden md:table-cell">Last Updated</th>
+              <tr className="border-b border-gray-800/60 text-xs font-medium text-gray-400">
+                <th className="text-left px-5 py-3">SKU code</th>
+                <th className="text-left px-5 py-3">Product description</th>
+                <th className="text-center px-4 py-3">Unit</th>
+                <th className="px-5 py-3">Stock level</th>
+                <th className="text-right px-5 py-3">Quantity on hand</th>
+                <th className="text-right px-5 py-3 hidden md:table-cell">Last updated</th>
               </tr>
             </thead>
             <tbody>

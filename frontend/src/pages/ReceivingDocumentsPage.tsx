@@ -69,7 +69,7 @@ export const ReceivingDocumentsPage: React.FC<ReceivingDocumentsPageProps> = ({
             className="btn-primary flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white shrink-0"
           >
             <Plus className="w-4 h-4" />
-            <span>New Inbound Document</span>
+            <span>Register inbound delivery</span>
           </button>
         )}
       </div>
@@ -157,12 +157,12 @@ export const ReceivingDocumentsPage: React.FC<ReceivingDocumentsPageProps> = ({
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800/60">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-widest">Document #</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-widest">Supplier / Vendor</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-widest hidden lg:table-cell">Expected Date</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-widest">Status</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-widest hidden md:table-cell">Completion</th>
+              <tr className="border-b border-gray-800/60 text-xs font-medium text-gray-400">
+                <th className="text-left px-5 py-3">Document number</th>
+                <th className="text-left px-5 py-3">Supplier / Vendor</th>
+                <th className="text-left px-5 py-3 hidden lg:table-cell">Expected arrival</th>
+                <th className="text-left px-5 py-3">Status</th>
+                <th className="text-left px-5 py-3 hidden md:table-cell">Received progress</th>
                 <th className="px-5 py-3"></th>
               </tr>
             </thead>

@@ -119,12 +119,12 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800/60">
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">SKU</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">Product Name</th>
-                <th className="text-left px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest hidden lg:table-cell">Description</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">UOM</th>
-                <th className="text-right px-5 py-3 text-xs font-semibold text-gray-600 uppercase tracking-widest">On Hand</th>
+              <tr className="border-b border-gray-800/60 text-xs font-medium text-gray-400">
+                <th className="text-left px-5 py-3">SKU code</th>
+                <th className="text-left px-5 py-3">Product name</th>
+                <th className="text-left px-5 py-3 hidden lg:table-cell">Description</th>
+                <th className="text-center px-4 py-3">Unit</th>
+                <th className="text-right px-5 py-3">Quantity on hand</th>
               </tr>
             </thead>
             <tbody>
