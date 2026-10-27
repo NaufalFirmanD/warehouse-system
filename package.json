@@ -1,0 +1,14 @@
+{
+  "name": "warehouse-receiving-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Warehouse Receiving System (WRS) Monorepo Root",
+  "scripts": {
+    "start": "docker compose up --build",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "test": "npm --prefix backend test"
+  }
+}
