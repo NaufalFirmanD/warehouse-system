@@ -1,12 +1,13 @@
 import React from 'react';
 import { User } from '../api/client';
-import { Truck, Package, Archive, History, Shield, UserCheck, Box } from 'lucide-react';
+import { Truck, Package, Archive, History, Shield, UserCheck, Box, LogOut } from 'lucide-react';
 
 interface NavbarProps {
   currentUser: User | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   onSwitchRole: (role: 'SUPERVISOR' | 'OPERATOR') => void;
+  onLogout: () => void;
 }
 
 const navItems = [
@@ -21,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   onSwitchRole,
+  onLogout,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-[0_1px_3px_0_rgba(0,0,0,0.03)]">
@@ -91,15 +93,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
 
-            {/* User Profile */}
-            <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-slate-200">
-              <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center">
-                {(currentUser?.fullName || 'U').charAt(0)}
+            {/* User Profile & Logout */}
+            <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
+              <div className="hidden sm:flex items-center gap-2">
+                <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center">
+                  {(currentUser?.fullName || 'U').charAt(0)}
+                </div>
+                <div className="text-left">
+                  <span className="text-xs font-semibold text-slate-800 block leading-tight">{currentUser?.fullName || '—'}</span>
+                  <span className="text-[10px] text-slate-500 capitalize block leading-tight">{currentUser?.role?.toLowerCase()}</span>
+                </div>
               </div>
-              <div className="text-left">
-                <span className="text-xs font-semibold text-slate-800 block leading-tight">{currentUser?.fullName || '—'}</span>
-                <span className="text-[10px] text-slate-500 capitalize block leading-tight">{currentUser?.role?.toLowerCase()}</span>
-              </div>
+
+              <button
+                onClick={onLogout}
+                title="Sign out"
+                className="text-slate-400 hover:text-slate-700 p-1.5 rounded hover:bg-slate-100 transition-colors ml-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   StockTransaction,
 } from './api/client';
 import { Navbar } from './components/Navbar';
+import { LoginPage } from './pages/LoginPage';
 import { ReceivingDocumentsPage } from './pages/ReceivingDocumentsPage';
 import { ReceivingDetailPage } from './pages/ReceivingDetailPage';
 import { ProductsPage } from './pages/ProductsPage';
@@ -35,20 +36,6 @@ export const App: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Login handler / Role switcher
-  const handleSwitchRole = async (targetRole: 'SUPERVISOR' | 'OPERATOR') => {
-    const username = targetRole === 'SUPERVISOR' ? 'supervisor' : 'operator';
-    try {
-      const res = await api.login(username, 'password123');
-      setCurrentUser(res.user);
-      showToast(`Switched active role to ${res.user.role} (${res.user.fullName})`);
-      await loadAllData();
-    } catch (err: any) {
-      console.error('Failed to switch role:', err);
-      showToast(`Error switching role: ${err.message}`);
-    }
-  };
-
   const loadAllData = async () => {
     setLoading(true);
     try {
@@ -69,27 +56,56 @@ export const App: React.FC = () => {
     }
   };
 
-  // Initial mount: authenticate default user and load data
+  // Login handler
+  const handleLogin = async (username: string, password = 'password123') => {
+    setLoading(true);
+    try {
+      const res = await api.login(username, password);
+      setCurrentUser(res.user);
+      showToast(`Welcome, ${res.user.fullName} (${res.user.role})`);
+      await loadAllData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Logout handler
+  const handleLogout = () => {
+    api.setToken(null);
+    setCurrentUser(null);
+    setSelectedDocId(null);
+    showToast('Signed out of terminal.');
+  };
+
+  // Quick switch role handler
+  const handleSwitchRole = async (targetRole: 'SUPERVISOR' | 'OPERATOR') => {
+    const username = targetRole === 'SUPERVISOR' ? 'supervisor' : 'operator';
+    try {
+      const res = await api.login(username, 'password123');
+      setCurrentUser(res.user);
+      showToast(`Switched active role to ${res.user.role} (${res.user.fullName})`);
+      await loadAllData();
+    } catch (err: any) {
+      console.error('Failed to switch role:', err);
+      showToast(`Error switching role: ${err.message}`);
+    }
+  };
+
+  // Check existing session on mount
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Try getting current user if token exists, or default login as operator
-        let user: User;
         if (api.getToken()) {
-          try {
-            user = await api.getMe();
-          } catch {
-            const loginRes = await api.login('operator', 'password123');
-            user = loginRes.user;
-          }
+          const user = await api.getMe();
+          setCurrentUser(user);
+          await loadAllData();
         } else {
-          const loginRes = await api.login('operator', 'password123');
-          user = loginRes.user;
+          // If no token stored, don't auto-login so user sees the login page
+          setLoading(false);
         }
-        setCurrentUser(user);
-        await loadAllData();
-      } catch (err) {
-        console.error('Auth initialization failed:', err);
+      } catch {
+        api.setToken(null);
+        setCurrentUser(null);
         setLoading(false);
       }
     };
@@ -118,6 +134,16 @@ export const App: React.FC = () => {
     await loadAllData();
   };
 
+  // If not logged in, display the dedicated Login Screen
+  if (!currentUser) {
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        loading={loading}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col antialiased">
       {/* Top Navigation */}
@@ -130,6 +156,7 @@ export const App: React.FC = () => {
           loadAllData();
         }}
         onSwitchRole={handleSwitchRole}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -198,4 +225,5 @@ export const App: React.FC = () => {
     </div>
   );
 };
+
 export default App;
