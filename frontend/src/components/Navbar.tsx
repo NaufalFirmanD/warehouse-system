@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '../api/client';
-import { Package, Truck, Boxes, History, UserCheck, Shield } from 'lucide-react';
+import { Truck, Package, Archive, History, Shield, UserCheck, Layers } from 'lucide-react';
 
 interface NavbarProps {
   currentUser: User | null;
@@ -9,6 +9,13 @@ interface NavbarProps {
   onSwitchRole: (role: 'SUPERVISOR' | 'OPERATOR') => void;
 }
 
+const navItems = [
+  { id: 'documents', label: 'Receiving',     icon: Truck   },
+  { id: 'products',  label: 'Products',      icon: Package },
+  { id: 'inventory', label: 'Inventory',     icon: Archive },
+  { id: 'history',   label: 'Transactions',  icon: History },
+];
+
 export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
   activeTab,
@@ -16,111 +23,118 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSwitchRole,
 }) => {
   return (
-    <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Truck className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <div className="font-bold text-lg text-white flex items-center gap-2">
-                <span>Warehouse Receiving</span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                  WRS v1.0
-                </span>
+    <header className="bg-gray-950 border-b border-gray-800/80 sticky top-0 z-30">
+      {/* Top accent line */}
+      <div className="h-px bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
+
+      <div className="max-w-[1400px] mx-auto px-6">
+        <div className="flex items-center h-[60px] gap-6">
+
+          {/* Brand */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="relative">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <Layers className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
               </div>
-              <p className="text-xs text-slate-400">Inbound Operations & Stock Ledger</p>
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-gray-950" />
+            </div>
+            <div className="hidden sm:block">
+              <div className="text-sm font-bold text-white leading-none tracking-tight">WRS</div>
+              <div className="text-[10px] font-medium text-gray-500 leading-none mt-0.5 tracking-wide">Warehouse System</div>
             </div>
           </div>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex space-x-1">
-            <button
-              onClick={() => setActiveTab('documents')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                activeTab === 'documents'
-                  ? 'bg-blue-600/10 text-blue-400 border border-blue-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-            >
-              <Truck className="w-4 h-4" />
-              <span>Receiving Documents</span>
-            </button>
+          {/* Divider */}
+          <div className="hidden md:block w-px h-5 bg-gray-800" />
 
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                activeTab === 'products'
-                  ? 'bg-blue-600/10 text-blue-400 border border-blue-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-            >
-              <Package className="w-4 h-4" />
-              <span>Product Catalog</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('inventory')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                activeTab === 'inventory'
-                  ? 'bg-blue-600/10 text-blue-400 border border-blue-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-            >
-              <Boxes className="w-4 h-4" />
-              <span>Available Inventory</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition ${
-                activeTab === 'history'
-                  ? 'bg-blue-600/10 text-blue-400 border border-blue-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-              }`}
-            >
-              <History className="w-4 h-4" />
-              <span>Transaction History</span>
-            </button>
+          {/* Nav Items */}
+          <nav className="hidden md:flex items-center gap-1 flex-1">
+            {navItems.map(({ id, label, icon: Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => setActiveTab(id)}
+                  className={`
+                    flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150
+                    ${isActive
+                      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60 border border-transparent'
+                    }
+                  `}
+                >
+                  <Icon className="w-4 h-4" strokeWidth={isActive ? 2.5 : 2} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Role Switcher & User Profile */}
-          <div className="flex items-center space-x-3">
-            <div className="bg-slate-800 p-1 rounded-lg border border-slate-700/60 flex items-center">
+          {/* Right Section */}
+          <div className="flex items-center gap-3 ml-auto">
+            {/* Role Toggle */}
+            <div className="flex items-center bg-gray-900 rounded-xl p-1 border border-gray-800 gap-0.5">
               <button
                 onClick={() => onSwitchRole('OPERATOR')}
-                className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                   currentUser?.role === 'OPERATOR'
-                    ? 'bg-blue-600 text-white shadow'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
-                title="Switch to Warehouse Operator view"
               >
                 <UserCheck className="w-3.5 h-3.5" />
-                <span>Operator</span>
+                <span className="hidden sm:inline">Operator</span>
               </button>
               <button
                 onClick={() => onSwitchRole('SUPERVISOR')}
-                className={`flex items-center space-x-1.5 px-2.5 py-1 rounded text-xs font-medium transition ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                   currentUser?.role === 'SUPERVISOR'
-                    ? 'bg-indigo-600 text-white shadow'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-500/25'
+                    : 'text-gray-400 hover:text-gray-200'
                 }`}
-                title="Switch to Warehouse Supervisor view"
               >
                 <Shield className="w-3.5 h-3.5" />
-                <span>Supervisor</span>
+                <span className="hidden sm:inline">Supervisor</span>
               </button>
             </div>
 
-            <div className="hidden sm:block text-right">
-              <div className="text-xs font-semibold text-slate-200">{currentUser?.fullName}</div>
-              <div className="text-[11px] text-slate-400">@{currentUser?.username}</div>
+            {/* User Avatar */}
+            <div className="flex items-center gap-2.5 pl-3 border-l border-gray-800">
+              <div className={`
+                w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shadow-md
+                ${currentUser?.role === 'SUPERVISOR'
+                  ? 'bg-gradient-to-br from-violet-500 to-purple-700 shadow-violet-500/20 text-white'
+                  : 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/20 text-white'
+                }
+              `}>
+                {(currentUser?.fullName || 'U').charAt(0)}
+              </div>
+              <div className="hidden lg:block">
+                <div className="text-xs font-semibold text-gray-200 leading-tight">{currentUser?.fullName || '—'}</div>
+                <div className="text-[10px] text-gray-500 leading-tight mt-0.5 capitalize">{currentUser?.role?.toLowerCase()}</div>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Nav */}
+      <div className="md:hidden flex items-center gap-1 px-4 pb-2 overflow-x-auto">
+        {navItems.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                isActive ? 'bg-blue-500/10 text-blue-400' : 'text-gray-400'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{label}</span>
+            </button>
+          );
+        })}
       </div>
     </header>
   );

@@ -119,7 +119,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen mesh-bg text-gray-100 flex flex-col">
       {/* Top Navigation */}
       <Navbar
         currentUser={currentUser}
@@ -133,9 +133,9 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-7">
         {toastMessage && (
-          <div className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-blue-400/30 animate-in slide-in-from-bottom duration-200">
+          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-gray-800 border border-blue-500/30 text-blue-300 text-sm font-medium px-4 py-3 rounded-xl shadow-2xl animate-slide-in">
             {toastMessage}
           </div>
         )}
@@ -192,8 +192,10 @@ export const App: React.FC = () => {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-600">
-        Warehouse Receiving System • Built with React, TypeScript, Express, and PostgreSQL
+      <footer className="border-t border-gray-900 mt-8 py-4 text-center">
+        <span className="text-xs text-gray-700">Warehouse Receiving System</span>
+        <span className="text-gray-800 mx-2">·</span>
+        <span className="text-xs text-gray-700">React · TypeScript · Express · PostgreSQL</span>
       </footer>
     </div>
   );
