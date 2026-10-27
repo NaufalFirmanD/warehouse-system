@@ -7,13 +7,23 @@ export async function runMigrations() {
   console.log('🔄 Running database migrations...');
   const client = await pool.connect();
   try {
+    const findSqlFile = (filename: string) => {
+      const distPath = path.join(__dirname, filename);
+      if (fs.existsSync(distPath)) return distPath;
+      const srcPath = path.join(__dirname, '../../src/migrations', filename);
+      if (fs.existsSync(srcPath)) return srcPath;
+      const relativeSrc = path.join(__dirname, '../src/migrations', filename);
+      if (fs.existsSync(relativeSrc)) return relativeSrc;
+      return distPath;
+    };
+
     // 1. Run Initial Schema
-    const schemaSql = fs.readFileSync(path.join(__dirname, '001_initial_schema.sql'), 'utf-8');
+    const schemaSql = fs.readFileSync(findSqlFile('001_initial_schema.sql'), 'utf-8');
     await client.query(schemaSql);
     console.log('✅ 001_initial_schema.sql applied.');
 
     // 2. Run Seed Data
-    const seedSql = fs.readFileSync(path.join(__dirname, '002_seed_data.sql'), 'utf-8');
+    const seedSql = fs.readFileSync(findSqlFile('002_seed_data.sql'), 'utf-8');
     await client.query(seedSql);
     console.log('✅ 002_seed_data.sql applied.');
 
