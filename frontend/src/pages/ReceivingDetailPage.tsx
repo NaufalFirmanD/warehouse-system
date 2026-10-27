@@ -92,6 +92,7 @@ export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
   const overallPct = totalExpected > 0 ? Math.round((totalReceived / totalExpected) * 100) : 0;
   const allItemsReceived = doc.items.length > 0 && doc.items.every(i => i.receivedQuantity >= i.expectedQuantity);
   const isLocked = doc.status === 'COMPLETED' || doc.status === 'CANCELED';
+  const isSupervisor = currentUser?.role === 'SUPERVISOR';
 
   return (
     <div className="space-y-5 animate-fade-in-up">
@@ -171,13 +172,19 @@ export const ReceivingDetailPage: React.FC<ReceivingDetailPageProps> = ({
             {!isLocked && (
               <button
                 onClick={handleCompleteDocument}
-                disabled={actionLoading || !allItemsReceived}
+                disabled={actionLoading || !allItemsReceived || !isSupervisor}
                 className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                  allItemsReceived
+                  allItemsReceived && isSupervisor
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
                     : 'bg-gray-800 text-gray-600 cursor-not-allowed border border-gray-700/40'
                 }`}
-                title={!allItemsReceived ? 'All items must be fully received first' : undefined}
+                title={
+                  !isSupervisor
+                    ? 'Only Supervisors can mark documents as completed'
+                    : !allItemsReceived
+                    ? 'All items must be fully received first'
+                    : undefined
+                }
               >
                 <ClipboardCheck className="w-3.5 h-3.5" />
                 {actionLoading ? 'Processing...' : 'Mark Completed'}

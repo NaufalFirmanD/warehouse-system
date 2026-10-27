@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { ReceivingDocumentSummary, ReceivingDocumentDetail, api, User } from '../api/client';
+import React, { useState } from 'react';
+import { ReceivingDocumentSummary, User } from '../api/client';
 import { StatusBadge } from '../components/StatusBadge';
 import {
-  Truck, Plus, Search, Calendar, ChevronRight, ClipboardList,
-  CheckCircle2, AlertCircle, Clock, XCircle, ArrowRight, Package
+  Truck, Plus, Search, Calendar, ClipboardList,
+  CheckCircle2, Clock, XCircle, ArrowRight
 } from 'lucide-react';
 
 interface ReceivingDocumentsPageProps {
