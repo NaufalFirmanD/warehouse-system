@@ -1,0 +1,61 @@
+%% Data Flow & State Transition Diagrams for Warehouse Receiving System
+
+%% 1. State Transitions for Receiving Document
+stateDiagram-v2
+    [*] --> DRAFT : Supervisor creates document
+    DRAFT --> PENDING : Supervisor finalizes items
+    DRAFT --> CANCELED : Supervisor discards draft
+    PENDING --> RECEIVING : Operator records first receipt (qty > 0)
+    PENDING --> CANCELED : Canceled before dock receiving
+    RECEIVING --> RECEIVING : Partial receipt (received < expected)
+    RECEIVING --> COMPLETED : All items fully received (100%)
+    COMPLETED --> [*] : Locked & Archival
+    CANCELED --> [*] : Voided
+
+%% 2. Item Receiving Sequence & Concurrency Lock
+sequenceDiagram
+    autonumber
+    actor Operator as Warehouse Operator
+    participant UI as Web Frontend (React)
+    participant API as Express API Server
+    participant DB as PostgreSQL Database
+
+    Operator->>UI: Input receipt quantity (e.g. qty = 5)
+    UI->>API: POST /api/receiving-documents/{id}/receive<br/>{ itemId, quantity }
+    
+    activate API
+    API->>DB: BEGIN TRANSACTION (SERIALIZABLE or READ COMMITTED)
+    
+    API->>DB: SELECT * FROM receiving_documents WHERE id = $1 FOR UPDATE
+    DB-->>API: Document Record (check status is PENDING or RECEIVING)
+    
+    API->>DB: SELECT * FROM receiving_document_items WHERE id = $2 FOR UPDATE
+    DB-->>API: Item Record (expected_qty, received_qty)
+    
+    rect rgb(240, 248, 255)
+        Note over API: Strict Business Rule Validation:<br/>remaining = expected_qty - received_qty<br/>Assert: quantity > 0 AND quantity <= remaining
+    end
+
+    alt If quantity > remaining
+        API->>DB: ROLLBACK
+        API-->>UI: 422 Unprocessable Entity ("Over-receiving rejected")
+        UI-->>Operator: Display alert: Exceeds remaining expected quantity
+    else If quantity <= remaining
+        API->>DB: UPDATE receiving_document_items<br/>SET received_quantity = received_quantity + $qty<br/>WHERE id = $itemId
+        
+        API->>DB: INSERT INTO inventory (product_id, quantity_on_hand)<br/>VALUES ($prodId, $qty)<br/>ON CONFLICT (product_id)<br/>DO UPDATE SET quantity_on_hand = inventory.quantity_on_hand + $qty
+        
+        API->>DB: INSERT INTO stock_transactions<br/>(product_id, document_id, line_item_id, quantity, transaction_type, created_by)<br/>VALUES (...)
+        
+        API->>DB: Check if all items in document have received == expected
+        alt All items fully received
+            API->>DB: UPDATE receiving_documents SET status = 'COMPLETED'
+        else Still items remaining
+            API->>DB: UPDATE receiving_documents SET status = 'RECEIVING' (if was PENDING)
+        end
+        
+        API->>DB: COMMIT TRANSACTION
+        API-->>UI: 200 OK (Updated item, document status, new stock level)
+        deactivate API
+        UI-->>Operator: Update UI badge, show success toast
+    end

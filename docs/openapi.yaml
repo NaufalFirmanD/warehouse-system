@@ -1,0 +1,602 @@
+openapi: 3.0.3
+info:
+  title: Warehouse Receiving System API
+  description: REST API specification for managing products, inbound receiving documents, item receipts, and inventory tracking.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local development / Docker server
+paths:
+  /health:
+    get:
+      summary: Health and readiness check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy and database is connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  database:
+                    type: string
+                    example: connected
+
+  /api/auth/login:
+    post:
+      summary: Authenticate user / switch active role
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: supervisor
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/me:
+    get:
+      summary: Get currently authenticated user details
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /api/products:
+    get:
+      summary: List all products with current stock summary
+      operationId: listProducts
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductWithStock'
+    post:
+      summary: Create a new product (Supervisor only)
+      operationId: createProduct
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Validation error or duplicate SKU
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/receiving-documents:
+    get:
+      summary: List receiving documents
+      operationId: listReceivingDocuments
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [DRAFT, PENDING, RECEIVING, COMPLETED, CANCELED]
+      responses:
+        '200':
+          description: List of receiving documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReceivingDocumentSummary'
+    post:
+      summary: Create a receiving document (Supervisor only)
+      operationId: createReceivingDocument
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReceivingDocumentRequest'
+      responses:
+        '201':
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingDocumentDetail'
+
+  /api/receiving-documents/{id}:
+    get:
+      summary: Get receiving document details and line items
+      operationId: getReceivingDocumentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Receiving document details with items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingDocumentDetail'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/receiving-documents/{id}/status:
+    patch:
+      summary: Update receiving document status
+      operationId: updateReceivingDocumentStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, COMPLETED, CANCELED]
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingDocumentDetail'
+        '422':
+          description: Invalid transition (e.g. completing incomplete document)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/receiving-documents/{id}/items:
+    post:
+      summary: Add line item to a DRAFT receiving document
+      operationId: addDocumentItem
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - expectedQuantity
+              properties:
+                productId:
+                  type: string
+                  format: uuid
+                expectedQuantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        '201':
+          description: Item added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingDocumentItem'
+
+  /api/receiving-documents/{id}/receive:
+    post:
+      summary: Record actual received quantity for a line item
+      operationId: recordReceipt
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordReceiptRequest'
+      responses:
+        '200':
+          description: Receipt recorded, stock balance and transaction updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordReceiptResponse'
+        '422':
+          description: Business rule validation failure (Over-receiving rejected or document not active)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/inventory:
+    get:
+      summary: Get all current inventory stock balances
+      operationId: getInventory
+      responses:
+        '200':
+          description: List of current on-hand stock per product
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryRecord'
+
+  /api/inventory/transactions:
+    get:
+      summary: Get stock transaction history (audit trail)
+      operationId: getStockTransactions
+      parameters:
+        - name: productId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Stock transaction audit log
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StockTransactionRecord'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [SUPERVISOR, OPERATOR]
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        uom:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateProductRequest:
+      type: object
+      required:
+        - sku
+        - name
+      properties:
+        sku:
+          type: string
+          example: SKU-ELEC-001
+        name:
+          type: string
+          example: Wireless Barcode Scanner
+        description:
+          type: string
+          example: 2.4GHz handheld laser scanner
+        uom:
+          type: string
+          example: PCS
+
+    ProductWithStock:
+      allOf:
+        - $ref: '#/components/schemas/Product'
+        - type: object
+          properties:
+            quantityOnHand:
+              type: integer
+              example: 120
+
+    ReceivingDocumentItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        documentId:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productSku:
+          type: string
+        productName:
+          type: string
+        uom:
+          type: string
+        expectedQuantity:
+          type: integer
+          example: 100
+        receivedQuantity:
+          type: integer
+          example: 40
+        remainingQuantity:
+          type: integer
+          example: 60
+
+    ReceivingDocumentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        documentNumber:
+          type: string
+        supplierName:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, PENDING, RECEIVING, COMPLETED, CANCELED]
+        expectedDate:
+          type: string
+          format: date
+        totalItemsCount:
+          type: integer
+        fullyReceivedItemsCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ReceivingDocumentDetail:
+      allOf:
+        - $ref: '#/components/schemas/ReceivingDocumentSummary'
+        - type: object
+          properties:
+            notes:
+              type: string
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReceivingDocumentItem'
+
+    CreateReceivingDocumentRequest:
+      type: object
+      required:
+        - supplierName
+        - items
+      properties:
+        documentNumber:
+          type: string
+          description: Optional, auto-generated if omitted
+        supplierName:
+          type: string
+          example: Global Logistics Corp
+        expectedDate:
+          type: string
+          format: date
+          example: '2026-10-30'
+        notes:
+          type: string
+          example: Dock bay 3 delivery
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - productId
+              - expectedQuantity
+            properties:
+              productId:
+                type: string
+                format: uuid
+              expectedQuantity:
+                type: integer
+                minimum: 1
+
+    RecordReceiptRequest:
+      type: object
+      required:
+        - itemId
+        - quantity
+      properties:
+        itemId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+          description: Actual quantity received in this physical unloading batch
+          example: 25
+
+    RecordReceiptResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Receipt recorded successfully
+        item:
+          $ref: '#/components/schemas/ReceivingDocumentItem'
+        documentStatus:
+          type: string
+          example: RECEIVING
+        newQuantityOnHand:
+          type: integer
+          example: 145
+
+    InventoryRecord:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        name:
+          type: string
+        uom:
+          type: string
+        quantityOnHand:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+
+    StockTransactionRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        sku:
+          type: string
+        productName:
+          type: string
+        documentNumber:
+          type: string
+        quantity:
+          type: integer
+          example: 25
+        transactionType:
+          type: string
+          example: INBOUND_RECEIPT
+        operatorName:
+          type: string
+          example: John Operator
+        createdAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: OVER_RECEIVING_ERROR
+        message:
+          type: string
+          example: Cannot receive more than remaining expected quantity.
+        details:
+          type: object

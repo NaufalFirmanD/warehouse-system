@@ -1,0 +1,71 @@
+erDiagram
+    USERS ||--o{ RECEIVING_DOCUMENTS : "creates"
+    USERS ||--o{ STOCK_TRANSACTIONS : "performed_by"
+    
+    PRODUCTS ||--o{ RECEIVING_DOCUMENT_ITEMS : "specified_in"
+    PRODUCTS ||--|| INVENTORY : "has_current_stock"
+    PRODUCTS ||--o{ STOCK_TRANSACTIONS : "tracked_in"
+
+    RECEIVING_DOCUMENTS ||--|{ RECEIVING_DOCUMENT_ITEMS : "contains"
+    RECEIVING_DOCUMENTS ||--o{ STOCK_TRANSACTIONS : "referenced_in"
+    RECEIVING_DOCUMENT_ITEMS ||--o{ STOCK_TRANSACTIONS : "generates"
+
+    USERS {
+        uuid id PK
+        string username UK
+        string password_hash
+        string full_name
+        string role "SUPERVISOR | OPERATOR"
+        timestamp created_at
+    }
+
+    PRODUCTS {
+        uuid id PK
+        string sku UK "Unique barcode/item code"
+        string name
+        string description
+        string uom "Unit of measure: PCS, BOX, KG"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RECEIVING_DOCUMENTS {
+        uuid id PK
+        string document_number UK "e.g. RCV-20261028-001"
+        string supplier_name
+        string status "DRAFT | PENDING | RECEIVING | COMPLETED | CANCELED"
+        date expected_date
+        text notes
+        uuid created_by FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RECEIVING_DOCUMENT_ITEMS {
+        uuid id PK
+        uuid document_id FK
+        uuid product_id FK
+        integer expected_quantity "Must be > 0"
+        integer received_quantity "Default 0, <= expected_quantity"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    INVENTORY {
+        uuid id PK
+        uuid product_id FK, UK "One record per product"
+        integer quantity_on_hand "Default 0, >= 0"
+        timestamp updated_at
+    }
+
+    STOCK_TRANSACTIONS {
+        uuid id PK
+        uuid product_id FK
+        uuid document_id FK "Nullable for manual adjustments"
+        uuid line_item_id FK "Nullable"
+        integer quantity "Delta quantity, e.g. +5"
+        string transaction_type "INBOUND_RECEIPT"
+        text notes
+        uuid created_by FK
+        timestamp created_at
+    }
